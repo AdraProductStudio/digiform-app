@@ -1,8 +1,9 @@
 import React from 'react'
 import { Button, Card, Col, Container, Row } from 'react-bootstrap'
 import Image from '../utils/images'
+import { NavLink } from 'react-router-dom'
 
-const CardComponent = () => {
+const HomepageCards = () => {
 
     const cardsArray = [
         {
@@ -71,7 +72,9 @@ const CardComponent = () => {
                                             <Card.Text>
                                                 {item.cardTitle}
                                             </Card.Text>
-                                            <Button variant="primary">{item.cardButtonText}</Button>
+                                            <NavLink to='/update-information'>
+                                                <Button variant="primary">{item.cardButtonText}</Button>
+                                            </NavLink>
                                         </Card.Body>
                                     </Card>
                                 </Col>
@@ -84,4 +87,4 @@ const CardComponent = () => {
     )
 }
 
-export default CardComponent
+export default HomepageCards

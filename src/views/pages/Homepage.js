@@ -1,13 +1,13 @@
 import React from 'react'
-import Header from './Header'
-import Footer from './Footer'
-import CardComponent from './CardComponent'
+import Header from '../Header'
+import Footer from '../Footer'
+import HomepageCards from '../HomepageCards'
 
 const Homepage = () => {
     return (
         <div className='layout'>
             <Header />
-            <CardComponent />
+            <HomepageCards />
             <Footer />
         </div>
     )

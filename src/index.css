@@ -7,6 +7,7 @@
 
 :root {
   --vh-height: 100vh;
+  --custom-blue : #007bff;
 }
 
 body {
@@ -18,9 +19,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
   overflow: auto;
   -ms-overflow-style: none;
-  /* Hide scrollbar for IE and Edge */
-  scrollbar-width: none;
-  /* Hide scrollbar for Firefox */
 }
 
 code {
@@ -34,13 +32,10 @@ code {
 
 .header-section {
   height: calc(var(--vh-height) - 92vh) !important;
-  height: 20vh;
 }
 
 .footer-section {
   height: calc(var(--vh-height) - 94vh) !important;
-  height: 20vh;
-
 }
 
 .main-section {
@@ -52,4 +47,24 @@ code {
 /* Hide scrollbar for Chrome, Safari and Opera */
 ::-webkit-scrollbar {
   display: none;
+}
+
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
+  
+.text12 {
+  font-size: 12px;
+}
+
+.cup {
+  cursor: pointer;
 }

@@ -1,6 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
-import Homepage from "./components/Homepage";
-import UpdateInformation from "./components/UpdateInformation";
+import Homepage from './views/pages/Homepage';
+import UpdateInformation from './views/pages/UpdateInformation';
 
 function App() {
   return (
