@@ -8,7 +8,7 @@ const Homepage = () => {
         <div className='layout'>
             <Header />
             <HomepageCards />
-            <Footer />
+            <Footer isFooterText={true}/>
         </div>
     )
 }

@@ -5,14 +5,17 @@ const CustomInput = ({
     labelName,
     inputType,
     inputPlaceholder,
-    className
+    className,
+    customOnchange,
+    value
 }) => {
+
 
     return (
         <Form>
             <Form.Group className={`${className}` } controlId="exampleForm.ControlInput1">
                 <Form.Label>{labelName}</Form.Label>
-                <Form.Control type={inputType} placeholder={inputPlaceholder} />
+                <Form.Control type={inputType} placeholder={inputPlaceholder} onChange={customOnchange} value={value} />
             </Form.Group>
         </Form>
     )

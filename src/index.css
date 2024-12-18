@@ -1,13 +1,18 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Manrope:wght@200..800&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
-
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Manrope:wght@200..800&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 * {
-  font-family: "Poppins", serif;
+  font-family: "DM Sans", serif;
   box-sizing: border-box;
 }
 
 :root {
   --vh-height: 100vh;
-  --custom-blue : #007bff;
+  --custom-blue: #007bff;
+  --custom-grey: #EFF0F6;
+  --custom-grey2: #747474;
+  --custom-button-bg: #809BCE;
+  --custom-button-hover : #667da7;
+  --custom-primary : #1859FF;
+  --custom-success : #259A54;
 }
 
 body {
@@ -21,28 +26,32 @@ body {
   -ms-overflow-style: none;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
-}
-
 .layout {
   height: calc(var(--vh-height));
 }
 
 .header-section {
   height: calc(var(--vh-height) - 92vh) !important;
+  background-color: #fff;
 }
 
 .footer-section {
   height: calc(var(--vh-height) - 94vh) !important;
+  background-color: var(--custom-grey);
 }
 
 .main-section {
   height: calc(var(--vh-height) - 14vh) !important;
   overflow-y: scroll;
+  background-color: var(--custom-grey);
 }
 
+.main-section .card-title {
+  margin-bottom: 2.063rem;
+  font-family: "Inter", serif;
+  font-size: 1rem !important;
+  color: var(--custom-grey2);
+}
 
 /* Hide scrollbar for Chrome, Safari and Opera */
 ::-webkit-scrollbar {
@@ -60,7 +69,7 @@ input::-webkit-inner-spin-button {
 input[type=number] {
   -moz-appearance: textfield;
 }
-  
+
 .text12 {
   font-size: 12px;
 }
@@ -68,3 +77,34 @@ input[type=number] {
 .cup {
   cursor: pointer;
 }
+
+.btn.custom-button {
+  background-color: var(--custom-button-bg);
+  color: #fff;
+  width: 12rem;
+  height: 2.813rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.btn.custom-button-sm {
+  background-color: var(--custom-button-bg);
+  color: #fff;
+  width: 12rem;
+  padding: 0.30rem;
+  width: 100%;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.btn.custom-button:hover,
+.btn.custom-button-sm:hover
+{
+  background-color: var(--custom-button-hover);
+  color: #fff;
+}
+
+.btn-custom-primary{
+  color : var(--custom-primary)
+}
+
