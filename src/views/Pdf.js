@@ -11,7 +11,11 @@ const Pdf = ({
     handlePreviewClick,
     previewEnabled 
 
-}) => {
+}) =>
+    {
+
+        console.log(pdfUrl)
+
     const [numPages, setNumPages] = useState(Number);
     const [pageNumber, setPageNumber] = useState(1);
 
@@ -36,7 +40,7 @@ const Pdf = ({
 
                             </div>
                             <div>
-                                <button type="button" disabled={previewEnabled ? "" : "disabled"} className="btn border border-brand-color btn-primary" data-bs-toggle="modal" data-bs-target="#pdfModal" onClick={handlePreviewClick} >
+                                <button type="button" disabled={previewEnabled ? "" : "disabled"} className="btn border border-brand-color btn-primary" onClick={handlePreviewClick} >
                                     Preview
                                 </button>
                             </div>

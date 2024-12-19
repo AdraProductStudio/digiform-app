@@ -12,6 +12,7 @@ import pdffile from '../assets/HydroPower_RO35C_Manual-EN-1-1_1 (1).pdf'
 import Cookies from 'js-cookie';
 import axios from 'axios';
 import { PDFDocument, PDFTextField, PDFCheckBox, PDFDropdown, PDFRadioGroup } from 'pdf-lib';
+import { Document, Page } from 'react-pdf';
 
 
 
@@ -32,6 +33,14 @@ const MultistepForm = () => {
     } = useContext(CommonContext)
     const [show, setShow] = useState(false)
     const [showSecondModal, setShowSecondModal] = useState(false)
+
+    const [showPdfPreview, setShowPdfPreview] = useState(false);
+    const [pdfDataUrl, setPdfDataUrl] = useState(null);
+
+    const [loading, setLoading] = useState(false)
+    const [pageLoadingModal, setPageLoadingModal] = useState(false)
+
+
 
     const [documentAadhar, setDocumentAadhar] = useState(null)
     const [documentPan, setDocumentPan] = useState(null)
@@ -95,6 +104,75 @@ const MultistepForm = () => {
     ])
 
 
+
+    const handleClose1 = () => setShowPdfPreview(false);
+    const handleShow1 = async () => {
+        try {
+            const pdfUrl = await generateFilledPdf();
+            console.log("Generated PDF URL:", pdfUrl); // Debugging
+            setPdfDataUrl(pdfUrl);
+            setShowPdfPreview(true);
+        } catch (error) {
+            console.error("Error generating PDF:", error); // Debugging
+        }
+    };
+
+    console.log(pdfDataUrl)
+
+    const generateFilledPdf = async () => {
+        try {
+            const formUrl = "Individual_form.pdf";
+            const formPdfBytes = await fetch(formUrl).then((res) => {
+                if (!res.ok) {
+                    throw new Error(`Failed to fetch PDF: ${res.statusText}`);
+                }
+                return res.arrayBuffer();
+            });
+
+            const pdfDoc = await PDFDocument.load(formPdfBytes);
+            const form = pdfDoc.getForm();
+
+            // Fill the fields
+            const nameField = form.getTextField("name");
+            nameField.setText(KYCResponseData[0].aadhaar.name);
+            const FatherNameField = form.getTextField("FatherName");
+            FatherNameField.setText(KYCResponseData[0]?.aadhaar?.address?.careOf);
+            const genderField = form.getRadioGroup("Gender");
+            genderField.select(KYCResponseData[0]?.aadhaar?.gender === "M" ? "Male" : "Female");
+            const AadhaarField = form.getTextField("Aadhar");
+            AadhaarField.setText(`${KYCResponseData[0]?.aadhaarNumber}`);
+            const DobField = form.getTextField("Dob");
+            DobField.setText(KYCResponseData[0]?.aadhaar?.dateOfBirth);
+            const ResidentAddressField = form.getTextField("ResidenceAddress");
+            ResidentAddressField.setText(`${KYCResponseData[0]?.aadhaar?.address?.house} ${KYCResponseData[0]?.aadhaar?.address?.street} ${KYCResponseData[0]?.aadhaar?.address?.locality}`);
+            const ResidentCityField = form.getTextField("ResidentCity");
+            ResidentCityField.setText(`${KYCResponseData[0]?.aadhaar?.address?.subDistrict.slice(0, 15)}`);
+            const ResidentPincodeField = form.getTextField("ResidentPincode");
+            ResidentPincodeField.setText(`${KYCResponseData[0]?.aadhaar?.address?.pin}`);
+            const ResidentStateField = form.getTextField("ResidentState");
+            ResidentStateField.setText(`${KYCResponseData[0]?.aadhaar?.address?.state}`);
+            const ResidentCountryField = form.getTextField("ResidentCountry");
+            ResidentCountryField.setText(`${KYCResponseData[0]?.aadhaar?.address?.country}`);
+            // const phoneField = form.getTextField("phone");
+            // phoneField.setText(`${KYCResponseData[0]?.aadhaar?.phone}` );
+
+            // Save the PDF
+            const pdfBytes = await pdfDoc.save();
+            const pdfBlob = new Blob([pdfBytes], { type: "application/pdf" });
+
+
+
+            const blobUrl = URL.createObjectURL(pdfBlob);
+            handleFilledPdfUpload(URL.createObjectURL(pdfBlob))
+            console.log("Blob URL:", blobUrl); // Debugging
+            return blobUrl;
+        } catch (error) {
+            console.error("Error in generateFilledPdf:", error);
+            throw error;
+        }
+    };
+
+
     console.log("KYCResponseData98", KYCResponseData)
 
     useEffect(() => {
@@ -103,19 +181,25 @@ const MultistepForm = () => {
 
     const getCaptcha = async () => {
         try {
-            const response = await axios.get("http://10.10.11.62:5000/initiate_okyc")
+            setPageLoadingModal(true)
+            const response = await axios.get("http://10.10.11.66:5000/initiate_okyc")
             console.log(response.data)
 
             if (response.data.error_code = 200) {
                 setCaptchaImageUrl(response.data.data.captchaImage)
                 setcaptchaImage(`data:image/png;base64,${response.data.data.captchaImage}`)
                 setRequestId(response.data.data.id)
+                setPageLoadingModal(false)
             } else {
                 console.log(response.data.message)
+                setPageLoadingModal(false)
+
             }
 
         } catch (err) {
             console.log(err)
+            setPageLoadingModal(false)
+
         }
     }
 
@@ -136,23 +220,31 @@ const MultistepForm = () => {
         }
         try {
 
+            setLoading(true)
 
-            const response = await axios.post("http://10.10.11.62:5000/verify_okyc", payload, {
+            const response = await axios.post("http://10.10.11.66:5000/verify_okyc", payload, {
                 headers: {
                     "Content-Type": 'application/json'
                 }
             })
 
             if (response.data.error_code = 200) {
+                setLoading(false)
                 setcaptchaImage(`data:image/png;base64,${response.data.data.captchaImage}`)
                 setShowSecondModal(true)
                 setModalName("OTPVerification")
+                setLoading(false)
+
             } else {
                 console.log(response.data.message)
+                setLoading(false)
+
             }
 
         } catch (err) {
             console.log(err)
+            setLoading(false)
+
         }
     }
 
@@ -166,7 +258,8 @@ const MultistepForm = () => {
         }
         try {
 
-            const response = await axios.post("http://10.10.11.62:5000/complete_okyc", payload, {
+            setLoading(true)
+            const response = await axios.post("http://10.10.11.66:5000/complete_okyc", payload, {
                 headers: {
                     "Content-Type": 'application/json'
                 }
@@ -178,13 +271,19 @@ const MultistepForm = () => {
                 handleHideModal(true)
                 setPreviewEnabled(true)
                 setKYCResponseData(response.data.data)
+                setLoading(true)
+
 
             } else {
                 console.log(response.data.message)
+                setLoading(true)
+
             }
 
         } catch (err) {
             console.log(err)
+            setLoading(true)
+
         }
 
 
@@ -194,43 +293,54 @@ const MultistepForm = () => {
 
 
     const handlePreviewClick = async () => {
-        const inputPdfPath = pdfFilePath;
-        const response = await fetch(inputPdfPath);
-        const pdfBytes = await response.arrayBuffer();
-        const fieldData = extractedJSONFields.map(field => {
-            console.log("field", field)
-            const value = KYCResponseData.find(obj => obj.hasOwnProperty(field.name));
-            return {
-                ...field,
-                value: value ? value[field.name] : ""
-            };
-        });
 
-        console.log(fieldData)
 
-        try {
-            const filledPdfBytes = await fillPdfFields(pdfBytes, fieldData);
-            const blob = new Blob([filledPdfBytes], { type: "application/pdf" });
-            setOutputPdf(URL.createObjectURL(blob));
-            setPdfFilePath(URL.createObjectURL(blob))
-            handleFilledPdfUpload(URL.createObjectURL(blob))
-        } catch (error) {
-            console.error("Error filling PDF fields:", error);
-        }
+
+
+
+        // const inputPdfPath = pdfFilePath;
+        // const response = await fetch(inputPdfPath);
+        // const pdfBytes = await response.arrayBuffer();
+        // const fieldData = extractedJSONFields.map(field => {
+        //     console.log("field", field)
+        //     const value = KYCResponseData.find(obj => obj.hasOwnProperty(field.name));
+        //     return {
+        //         ...field,
+        //         value: value ? value[field.name] : ""
+        //     };
+        // });
+
+        // console.log(fieldData)
+
+        // try {
+        //     const filledPdfBytes = await fillPdfFields(pdfBytes, fieldData);
+        //     const blob = new Blob([filledPdfBytes], { type: "application/pdf" });
+        //     setOutputPdf(URL.createObjectURL(blob));
+        //     setPdfFilePath(URL.createObjectURL(blob))
+        //     handleFilledPdfUpload(URL.createObjectURL(blob))
+        // } catch (error) {
+        //     console.error("Error filling PDF fields:", error);
+        // }
     }
 
 
     // Filled pdf upload
     const handleFilledPdfUpload = async (filledPdf) => {
 
+        console.log("filledPdf", filledPdf)
         const requiredParams = {
             pdf: filledPdf,
             filename: "pdf_filled.pdf"
         }
         try {
+
+            console.log("requiredParams", requiredParams)
+
             await axios.post('https://digiformapi.adraproductstudio.com:5000/upload_filled_pdf', requiredParams)
                 .then((response) => {
+                    console.log(response)
                     if (response.data.error_code === 0) {
+                        console.log(response.data)
                         console.log(response.data.message)
                         setPdfFilePath(`https://digiformcdn.adraproductstudio.com/${response.data.file_location}`)
                     }
@@ -289,6 +399,7 @@ const MultistepForm = () => {
     }
 
     const handleShowModal = (value) => {
+        setLoading(false)
         setShow(true)
         setModalName(value)
     }
@@ -297,12 +408,12 @@ const MultistepForm = () => {
         setShow(false)
     }
 
-    const handleModalName = (name) => {
+    const handleModalHeader = (name) => {
         switch (name) {
             case "aadhaarModal":
-                return <h5 className='mb-0'>Digi locker sign in</h5>;
+                return <h5 className='mb-0'>Aadhaar card details</h5>;
             case "panModal":
-                return <h5 className='mb-0'>PAN upload</h5>;
+                return <h5 className='mb-0'>PAN card details</h5>;
             case "OTPVerification":
                 return <h5 className='mb-0'>Enter your OTP</h5>;
             default:
@@ -327,6 +438,7 @@ const MultistepForm = () => {
                             // customOnchange={handleInput}
                             // value={aadhaarNumber}
                             value="999999990019"
+                            disabled={true}
                         />
                         <img src={captchaImage} alt='captcha-image' />
                         <CustomInput
@@ -335,6 +447,7 @@ const MultistepForm = () => {
                             className="mx-3 mb-3"
                             // customOnchange={handleInput}
                             value="2GAD0"
+                            disabled={true}
                         />
                     </>
                 );
@@ -359,6 +472,7 @@ const MultistepForm = () => {
                             inputPlaceholder="Enter OTP"
                             className="mx-3 mb-3"
                             value="123456"
+                            disabled={true}
                         />
                         <div className='text-end text12 mx-3'>
                             <p className='mb-0'>Resend OTP : 60s</p>
@@ -378,15 +492,33 @@ const MultistepForm = () => {
                 return (
                     <div className='d-flex gap-3 my-2 mx-4'>
                         <CustomButton
-                            className="btn btn-outline-secondary w-50"
+                            className={`${loading ? "btn btn-outline-secondary w-50 pe-none opacity-25" : "btn btn-outline-secondary w-50"}`}
                             buttonName="Cancel"
                             customOnclick={handleHideModal}
                         />
-                        <CustomButton
-                            className="btn btn-primary w-50"
-                            buttonName="Submit"
-                            customOnclick={handleAadhaarSubmit}
-                        />
+                        {
+                            loading ?
+                                <CustomButton
+                                    className="btn btn-primary w-50 pe-none opacity-25"
+                                    buttonName={
+                                        <div class="text-center">
+                                            <div class="spinner-border spinner-border-sm text-white" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                        </div>
+                                    }
+                                    customOnclick={handleAadhaarSubmit}
+                                />
+
+                                :
+                                <CustomButton
+                                    className="btn btn-primary w-50"
+                                    buttonName="Submit"
+                                    customOnclick={handleAadhaarSubmit}
+                                />
+
+                        }
+
                     </div>
                 );
             case "panModal":
@@ -408,21 +540,46 @@ const MultistepForm = () => {
                 return (
                     <div className='d-flex gap-3 my-2 mx-4'>
                         <CustomButton
-                            className="btn btn-outline-secondary w-50"
+                            className={`${loading ? "btn btn-outline-secondary w-50 pe-none opacity-25" : "btn btn-outline-secondary w-50"}`}
                             buttonName="Cancel"
                             customOnclick={handleHideModal}
                         />
-                        <CustomButton
-                            className="btn btn-primary w-50"
-                            buttonName="Submit"
-                            customOnclick={handleOTPSubmit}
-                        />
+                        {
+                            loading ?
+                                <CustomButton
+                                    className="btn btn-primary w-50 pe-none opacity-25"
+                                    buttonName={
+                                        <div class="text-center">
+                                            <div class="spinner-border spinner-border-sm text-white" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                        </div>
+                                    }
+                                    customOnclick={handleOTPSubmit}
+                                />
+
+                                :
+                                <CustomButton
+                                    className="btn btn-primary w-50"
+                                    buttonName="Submit"
+                                    customOnclick={handleOTPSubmit}
+                                />
+
+                        }
                     </div>
                 );
             default:
                 return null
 
         }
+    }
+
+    const [numPages, setNumPages] = useState(Number);
+    const [pageNumber, setPageNumber] = useState(1);
+
+
+    function onDocumentLoadSuccess(pdf) {
+        setNumPages(pdf?.numPages);
     }
 
     return (
@@ -432,7 +589,7 @@ const MultistepForm = () => {
                     <div className='d-flex flex-row h-100 '>
                         <Col className="preview-column overflow-scroll">
 
-                            <Pdf pdfUrl={Cookies.get("selectedPdf")} handlePreviewClick={handlePreviewClick} previewEnabled={previewEnabled} />
+                            <Pdf pdfUrl={pdfDataUrl === null ? Cookies.get("selectedPdf") : pdfDataUrl} handlePreviewClick={handleShow1} previewEnabled={previewEnabled} />
                         </Col>
                         <Col className="multistep-form-column position-relative">
                             <div style={{ padding: "20px" }}>
@@ -455,7 +612,7 @@ const MultistepForm = () => {
                                                 <h4>Document checklist</h4>
                                                 <label htmlFor="field1" className="form-label text-grey">Please upload the following documents</label>
                                                 <div className="row mb-2">
-                                                    <div className="col-lg-6 my-3">
+                                                    <div className={`${isAadhaarUploaded ? "col-lg-6 my-3 pe-none":"col-lg-6 my-3"}`}>
                                                         <div
                                                             className={`card h-100 ${isAadhaarUploaded ? "border-success" : "border-primary"} border-2 shadow rounded-3 py-3 cup messageRelative ${documentsUploaded === true ? `pe-none disabled opacity-50` : ``} ${documentAadhar !== null ? "pe-none " : " "}`}
                                                             onClick={() => handleShowModal('aadhaarModal')}>
@@ -527,7 +684,7 @@ const MultistepForm = () => {
             </Container>
 
             <CustomModal
-                modalHeader={handleModalName(modalName)}
+                modalHeader={handleModalHeader(modalName)}
                 modalBody={handleModalBody(modalName)}
                 modalFooter={handleModalFooter(modalName)}
                 show={show}
@@ -538,7 +695,7 @@ const MultistepForm = () => {
             />
 
             {/* <!-- Modal --> */}
-            <div className="modal fade vh-100" id="pdfModal" data-bs-backdrop="static" data-bs-keyboard="false" tabIndex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+            {/* <div className="modal fade vh-100" id="pdfModal" data-bs-backdrop="static" data-bs-keyboard="false" tabIndex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
                 <div className="modal-dialog h-100 modal-xl ">
                     <div className="modal-content vh-100">
                         <div className="modal-header">
@@ -556,9 +713,79 @@ const MultistepForm = () => {
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> */}
 
-        </Container>
+
+            <Modal show={showPdfPreview} onHide={handleClose1} size="lg">
+                <Modal.Header closeButton>
+                    <Modal.Title>Filled PDF Preview</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+
+                    <Document file={pdfDataUrl} onLoadSuccess={onDocumentLoadSuccess} onLoadError={console.error}>
+                        <Page
+                            pageNumber={pageNumber}
+                            renderTextLayer={false}
+                            renderAnnotationLayer={false}
+                        />
+
+                    </Document>
+                    {/* {pdfDataUrl ? (
+                        <iframe
+                            src={pdfDataUrl}
+                            title="Filled PDF"
+                            style={{ width: "100%", height: "500px", border: "none" }}
+                        />
+                    ) : (
+                        <p>Loading PDF...</p>
+                    )} */}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleClose1}>
+                        Close
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+
+
+            {pageLoadingModal && (
+                <div
+                    className="modal show"
+                    tabIndex="-1"
+                    role="dialog"
+                    style={{
+                        display: "block",
+                        backgroundColor: "rgba(0, 0, 0, 0.5)", // Black backdrop
+                        position: "fixed",
+                        top: 0,
+                        left: 0,
+                        width: "100%",
+                        height: "100%",
+                        zIndex: 1050,
+                    }}
+                    onClick={(e) => {
+                        // Prevent backdrop click from closing modal
+                        e.stopPropagation();
+                    }}
+                >
+                    <div
+                        className="d-flex align-items-center justify-content-center"
+                        style={{ height: "100%" }}
+                    >
+                        <div class="d-flex justify-content-center text-light gap-3 align-items-center">
+                            <div class="spinner-border spinner-border" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <h5 className='fw-bold'>Loading...</h5>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+
+
+        </Container >
     )
 }
 

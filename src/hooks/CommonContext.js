@@ -89,7 +89,7 @@ export const DataProvider = ({ children }) => {
         },
         {
             "type": "PDFTextField",
-            "name": "MobileNum",
+            "name": "phone",
             "value": "",
         },
         {

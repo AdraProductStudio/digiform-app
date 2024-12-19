@@ -7,7 +7,8 @@ const CustomInput = ({
     inputPlaceholder,
     className,
     customOnchange,
-    value
+    value,
+    disabled
 }) => {
 
 
@@ -15,7 +16,7 @@ const CustomInput = ({
         <Form>
             <Form.Group className={`${className}` } controlId="exampleForm.ControlInput1">
                 <Form.Label>{labelName}</Form.Label>
-                <Form.Control type={inputType} placeholder={inputPlaceholder} onChange={customOnchange} value={value} />
+                <Form.Control type={inputType} placeholder={inputPlaceholder} onChange={customOnchange} value={value} disabled={disabled} />
             </Form.Group>
         </Form>
     )
